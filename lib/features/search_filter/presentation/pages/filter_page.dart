@@ -4,7 +4,7 @@ import 'package:widget_data_transfer_tutorial/features/search_filter/entity/sear
 
 /// Экран фильтра
 ///
-/// Пример передачи данных между виджетами через параметры конструктора
+/// Пример с доступом через state родительского виджета
 class FilterPage extends StatefulWidget {
   final SearchFilterEntity filter;
 
@@ -30,8 +30,8 @@ class _FilterPageState extends State<FilterPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Настройки фильтра'),
-        actions: [
-          _ClearButton(clearFilter: _clearFilter),
+        actions: const [
+          _ClearButton(),
         ],
       ),
       body: Padding(
@@ -39,13 +39,8 @@ class _FilterPageState extends State<FilterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _CategoryList(
-              selectedCategories: _userCategories,
-              onPressedCategory: _onPressedCategory,
-            ),
-            _SaveButton(
-              saveFilter: _userCategories.isEmpty ? null : _saveFilter,
-            ),
+            _CategoryList(userCategories: _userCategories),
+            const _SaveButton(),
           ],
         ),
       ),
@@ -53,7 +48,7 @@ class _FilterPageState extends State<FilterPage> {
   }
 
   /// Обработка клика по категории
-  void _onPressedCategory(CategoryTypeEntity category) {
+  void onPressedCategory(CategoryTypeEntity category) {
     final isSelected = _userCategories.contains(category);
 
     setState(() {
@@ -66,7 +61,7 @@ class _FilterPageState extends State<FilterPage> {
   }
 
   /// Сбросить выбор всех категорий
-  void _clearFilter() {
+  void clearFilter() {
     setState(() {
       _userCategories.clear();
     });
@@ -74,7 +69,7 @@ class _FilterPageState extends State<FilterPage> {
 
   /// Сохранить фильтр
   /// Передаём на предыдущую страницу новый фильтр
-  void _saveFilter() {
+  void saveFilter() {
     Navigator.pop(
       context,
       SearchFilterEntity(_userCategories),
@@ -86,36 +81,34 @@ class _FilterPageState extends State<FilterPage> {
 class _CategoryItem extends StatelessWidget {
   final CategoryTypeEntity category;
   final bool isSelected;
-  final ValueChanged<CategoryTypeEntity> onPressedCategory;
 
   const _CategoryItem({
     Key? key,
     required this.category,
     required this.isSelected,
-    required this.onPressedCategory,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final filterState = context.findAncestorStateOfType<_FilterPageState>();
+
     return ActionChip(
       avatar: isSelected ? const Icon(Icons.check) : const Icon(Icons.remove),
       label: Text(category.name),
       backgroundColor: isSelected ? Colors.green[200] : Colors.deepPurple[50],
       shape: const StadiumBorder(),
-      onPressed: () => onPressedCategory(category),
+      onPressed: () => filterState?.onPressedCategory(category),
     );
   }
 }
 
 /// Список категорий
 class _CategoryList extends StatelessWidget {
-  final List<CategoryTypeEntity> selectedCategories;
-  final ValueChanged<CategoryTypeEntity> onPressedCategory;
+  final List<CategoryTypeEntity> userCategories;
 
   const _CategoryList({
     Key? key,
-    required this.selectedCategories,
-    required this.onPressedCategory,
+    required this.userCategories,
   }) : super(key: key);
 
   @override
@@ -127,8 +120,7 @@ class _CategoryList extends StatelessWidget {
           .map(
             (e) => _CategoryItem(
               category: e,
-              isSelected: selectedCategories.contains(e),
-              onPressedCategory: onPressedCategory,
+              isSelected: userCategories.contains(e),
             ),
           )
           .toList(),
@@ -138,14 +130,14 @@ class _CategoryList extends StatelessWidget {
 
 /// Кнопка Очистить фильтр
 class _ClearButton extends StatelessWidget {
-  final VoidCallback clearFilter;
-
-  const _ClearButton({Key? key, required this.clearFilter}) : super(key: key);
+  const _ClearButton({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final filterState = context.findAncestorStateOfType<_FilterPageState>();
+
     return IconButton.outlined(
-      onPressed: clearFilter,
+      onPressed: filterState?.clearFilter,
       icon: const Icon(Icons.clear),
     );
   }
@@ -153,17 +145,17 @@ class _ClearButton extends StatelessWidget {
 
 /// Кнопка Сохранить фильтр
 class _SaveButton extends StatelessWidget {
-  final VoidCallback? saveFilter;
-
-  const _SaveButton({Key? key, this.saveFilter}) : super(key: key);
+  const _SaveButton({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final filterState = context.findAncestorStateOfType<_FilterPageState>();
+
     return Expanded(
       child: Align(
         alignment: Alignment.bottomCenter,
         child: FilledButton(
-          onPressed: saveFilter,
+          onPressed: filterState!._userCategories.isEmpty ? null : filterState.saveFilter,
           child: const Text('Сохранить'),
         ),
       ),
