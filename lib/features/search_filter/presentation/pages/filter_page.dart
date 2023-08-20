@@ -3,6 +3,8 @@ import 'package:widget_data_transfer_tutorial/features/search_filter/entity/cate
 import 'package:widget_data_transfer_tutorial/features/search_filter/entity/search_filter_entity.dart';
 
 /// Экран фильтра
+///
+/// Пример передачи данных между виджетами через параметры конструктора
 class FilterPage extends StatefulWidget {
   final SearchFilterEntity filter;
 
@@ -29,10 +31,7 @@ class _FilterPageState extends State<FilterPage> {
       appBar: AppBar(
         title: const Text('Настройки фильтра'),
         actions: [
-          IconButton.outlined(
-            onPressed: _clearCategory,
-            icon: const Icon(Icons.clear),
-          ),
+          _ClearButton(clearFilter: _clearFilter),
         ],
       ),
       body: Padding(
@@ -44,7 +43,9 @@ class _FilterPageState extends State<FilterPage> {
               selectedCategories: _userCategories,
               onPressedCategory: _onPressedCategory,
             ),
-            _SaveButton(saveFilter: _userCategories.isEmpty ? null : _saveFilter),
+            _SaveButton(
+              saveFilter: _userCategories.isEmpty ? null : _saveFilter,
+            ),
           ],
         ),
       ),
@@ -65,7 +66,7 @@ class _FilterPageState extends State<FilterPage> {
   }
 
   /// Сбросить выбор всех категорий
-  void _clearCategory() {
+  void _clearFilter() {
     setState(() {
       _userCategories.clear();
     });
@@ -81,6 +82,7 @@ class _FilterPageState extends State<FilterPage> {
   }
 }
 
+/// Айтем категории
 class _CategoryItem extends StatelessWidget {
   final CategoryTypeEntity category;
   final bool isSelected;
@@ -105,6 +107,7 @@ class _CategoryItem extends StatelessWidget {
   }
 }
 
+/// Список категорий
 class _CategoryList extends StatelessWidget {
   final List<CategoryTypeEntity> selectedCategories;
   final ValueChanged<CategoryTypeEntity> onPressedCategory;
@@ -133,6 +136,22 @@ class _CategoryList extends StatelessWidget {
   }
 }
 
+/// Кнопка Очистить фильтр
+class _ClearButton extends StatelessWidget {
+  final VoidCallback clearFilter;
+
+  const _ClearButton({Key? key, required this.clearFilter}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.outlined(
+      onPressed: clearFilter,
+      icon: const Icon(Icons.clear),
+    );
+  }
+}
+
+/// Кнопка Сохранить фильтр
 class _SaveButton extends StatelessWidget {
   final VoidCallback? saveFilter;
 
