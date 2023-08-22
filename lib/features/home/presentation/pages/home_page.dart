@@ -1,27 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:widget_data_transfer_tutorial/features/search_filter/entity/search_filter_entity.dart';
 import 'package:widget_data_transfer_tutorial/features/search_filter/presentation/pages/filter_page.dart';
+import 'package:widget_data_transfer_tutorial/features/search_filter/providers/filter_provider.dart';
 
 /// Главная страница
-class HomePage extends StatefulWidget {
-  final SearchFilterEntity filter;
-
-  const HomePage({Key? key, required this.filter}) : super(key: key);
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  /// Фильтр пользователя
-  late SearchFilterEntity _userFilter;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _userFilter = widget.filter;
-  }
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,24 +19,36 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _userFilter.categories
-                  .map(
-                    (e) => Chip(
-                      label: Text(e.name),
-                      backgroundColor: Colors.green[200],
-                      shape: const StadiumBorder(),
-                    ),
-                  )
-                  .toList(),
+            Consumer<FilterProvider>(
+              builder: (_, filterProvider, __) {
+                final savedCategories = filterProvider.filter.categories;
+
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: savedCategories
+                      .map(
+                        (e) => Chip(
+                          label: Text(e.name),
+                          backgroundColor: Colors.green[200],
+                          shape: const StadiumBorder(),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
             ),
             Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: FilledButton(
-                  onPressed: () => _goToFilterSettings(_userFilter),
+                  onPressed: () => {
+                    Navigator.of(context).push<SearchFilterEntity>(
+                      MaterialPageRoute(
+                        builder: (_) => const FilterPage(),
+                      ),
+                    )
+                  },
                   child: const Text('Настроить фильтр'),
                 ),
               ),
@@ -60,22 +57,5 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-  }
-
-  /// Перейти на страницу настройки фильтра
-  Future<void> _goToFilterSettings(SearchFilterEntity filter) async {
-    final newFilter = await Navigator.of(context).push<SearchFilterEntity>(
-      MaterialPageRoute(
-        builder: (context) => FilterPage(
-          filter: filter,
-        ),
-      ),
-    );
-
-    if (newFilter != null) {
-      setState(() {
-        _userFilter = newFilter;
-      });
-    }
   }
 }
